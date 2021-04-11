@@ -1,7 +1,7 @@
 # Bowl mesh generator
 Project contain code generate disk, elliptic paraboloid and bowl mesh***
 
-***Creating a bowl mesh consists of two steps:***
+***Creating a bowl mesh consists of three steps:***
 
 ### 1. Generate disk mesh
 <img src="resource/DiskMesh.png">
@@ -9,17 +9,17 @@ Project contain code generate disk, elliptic paraboloid and bowl mesh***
 ### 2. Generate elliptic paraboloid mesh
 <img src="resource/EllipticParaboloidMesh.png">
 
-<br>
-
-## Examples:
-
-### Example №1 - Bowl 
+### 3. And combining these two mesh
 <img src="resource/BowlMesh.png">
 
-### Example №2 - Part Bowl
+<br>
+
+## Another examples:
+
+### Example №1 - Part Bowl
 <img src="resource/PartBowlMesh.png">
 
-### Example №3 - Bowl with hole 
+### Example №2 - Bowl with hole 
 <img src="resource/BowlHoleMesh.png">
 
 
