@@ -1,4 +1,4 @@
-# Bowl mesh generator
+# Bowl mesh generator OpenGL
 Project contain code generate disk, elliptic paraboloid and bowl mesh***
 
 ***Creating a bowl mesh consists of three steps:***
