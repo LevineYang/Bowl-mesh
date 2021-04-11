@@ -10,7 +10,9 @@ Project contain code generate disk, elliptic paraboloid and bowl mesh***
 <img src="resource/EllipticParaboloidMesh.png">
 
 <br>
+
 ## Examples:
+
 ### Example №1 - Bowl 
 <img src="resource/BowlMesh.png">
 
