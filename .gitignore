@@ -1,0 +1,8 @@
+.vs/
+lib/
+packages/
+resource/wood.png
+x64/
+*.config
+*.sln
+*.vcxproj*
