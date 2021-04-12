@@ -17,8 +17,9 @@ private:
 private:
 	float cen[3];
 	float rad;
-	bool set_hole = false;
 	float hole_rad;
+	bool set_hole = false;
+	bool useUV = false;
 public:
 	Disk(const float radius, const float center[3] = def_cen) : rad(radius), hole_rad(0.f)
 	{
@@ -29,11 +30,27 @@ public:
 
 	bool generate_mesh(const float max_size_vert, std::vector<float>& vertices, std::vector<uint>& indices) {
 		set_hole = false;
+		useUV = false;
 		return generate_mesh_(max_size_vert, vertices, indices);
 	}
 
 	bool generate_mesh_hole(const float max_size_vert, const float hole_radius, std::vector<float>& vertices, std::vector<uint>& indices) {
 		set_hole = true;
+		useUV = false;
+		hole_rad = hole_radius;
+		return generate_mesh_(max_size_vert, vertices, indices);
+	}
+
+	bool generate_mesh_uv(const float max_size_vert, std::vector<float>& vertices, std::vector<uint>& indices)
+	{
+		set_hole = false;
+		useUV = true;
+		return generate_mesh_(max_size_vert, vertices, indices);
+	}
+	bool generate_mesh_uv_hole(const float max_size_vert, const float hole_radius, std::vector<float>& vertices, std::vector<uint>& indices)
+	{
+		set_hole = true;
+		useUV = true;
 		hole_rad = hole_radius;
 		return generate_mesh_(max_size_vert, vertices, indices);
 	}
@@ -62,14 +79,20 @@ protected:
 		std::vector<float> x_grid;
 		std::vector<float> z_grid;
 
-		for (int i = 0; i < grid_size; ++i) {
-			for (int j = 0; j < grid_size; ++j) {
-				x_grid.push_back(R(i, j) * cos(THETA(i, j)));
-				z_grid.push_back(R(i, j) * sin(THETA(i, j)));
+
+		std::vector<std::pair<float, float>> uv;
+		for (int x = 0; x < grid_size; ++x) {
+			for (int z = 0; z < grid_size; ++z) {
+				x_grid.push_back(R(x, z) * cos(THETA(x, z)));
+				z_grid.push_back(R(x, z) * sin(THETA(x, z)));
 			}
 		}
 
 
+		/*
+			build vertices of disk mesh
+		*/
+		auto vertices_size = 0;
 		for (int i = 0; i < grid_size; ++i) {
 			for (int j = 0; j < grid_size; ++j) {
 				auto x = x_grid[j + i * grid_size];
@@ -83,12 +106,19 @@ protected:
 				vertices.push_back(x + cen[0]);
 				vertices.push_back(y);
 				vertices.push_back(z + cen[2]);
+				vertices_size += 3;
+				auto u = x;
+				auto v = z;
+				if (useUV) { // texture coordinates
+					vertices.push_back(u);
+					vertices.push_back(v);
+				}
 			}
 		}
-		int32 last_vert = vertices.size() / 3;
-		int32 vert_size = vertices.size() / 3;
-		
 
+		int32 last_vert = vertices_size / 3;
+		int32 vert_size = vertices_size / 3;
+		
 		/*
 			build indices
 		*/

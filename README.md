@@ -22,6 +22,9 @@ Project contain code generate disk, elliptic paraboloid and bowl mesh***
 ### Example №2 - Bowl with hole 
 <img src="resource/BowlHoleMesh.png">
 
+### Example №3 - Part Bowl with texture 
+<img src="resource/bowltexture.png">
+
 
 ## Third party library:
 - [GLM](https://github.com/g-truc/glm)

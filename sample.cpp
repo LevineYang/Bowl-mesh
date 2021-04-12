@@ -5,12 +5,13 @@
 #define STBI_MSC_SECURE_CRT
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "include/stb_image_write.h"
+#define STB_IMAGE_IMPLEMENTATION
+#include "include/stb_image.h"
 
 
 
 extern Camera cam_;
 extern float aspect_ratio;
-
 extern Shader SVshader;
 
 
@@ -24,7 +25,10 @@ void renderBowl();
 void renderEllipticParaboloid();
 void renderDisk();
 void renderPartBowl();
+GLuint loadTexture(const char* path, const bool gammaCorrection = false, const bool isHdr = false);
 
+static GLuint woodTexture = 0;
+static bool loadText = false;
 
 
 void displayDEMO(GLFWwindow* window)
@@ -39,10 +43,25 @@ void displayDEMO(GLFWwindow* window)
 	SVshader.setMat4("view", view);
 	SVshader.setMat4("projection", projection);
 
-	renderDisk();
+#define NO_TEXTURE
+#ifdef NO_TEXTURE
+	if (!loadText) {
+		stbi_set_flip_vertically_on_load(true);
+		woodTexture = loadTexture("resource/wood.png");
+		if (woodTexture == 0)
+			exit(EXIT_FAILURE);
+		SVshader.setInt("useTexture", 0);
+		loadText = true;
+	}
+
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, woodTexture);
+	
+#endif
+	//renderDisk();
 	//renderEllipticParaboloid();
 	//renderBowl();
-	//renderPartBowl();
+	renderPartBowl();
 
 	// unbound
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -76,13 +95,14 @@ void renderPartBowl()
 		std::vector<std::vector<float>> data;
 		std::vector<std::vector<uint>> idxs;
 
-		bowl.generate_mesh(4, 40.f, data, idxs);
+		//bowl.generate_mesh(4, 40.f, data, idxs);
+		bowl.generate_mesh_uv(4, 40.f, data, idxs);
 
 
 		for (auto i = 0; i < idxs.size(); ++i)
 			indexPartBowl[i] = idxs.at(i).size();
 
-		constexpr float stride = 3 * sizeof(float);
+		constexpr float stride = (3 + 2) * sizeof(float);
 
 		glBindVertexArray(PartBowlVAO[0]);
 		glBindBuffer(GL_ARRAY_BUFFER, PartBowlVBO[0]);
@@ -91,7 +111,9 @@ void renderPartBowl()
 		glBufferData(GL_ELEMENT_ARRAY_BUFFER, indexPartBowl[0] * sizeof(uint), &idxs[0][0], GL_STATIC_DRAW);
 		glEnableVertexAttribArray(0);
 		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, stride, (void*)0);
-
+		glEnableVertexAttribArray(1);
+		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, stride, (void*)(3 * sizeof(float)));
+		
 		glBindVertexArray(PartBowlVAO[1]);
 		glBindBuffer(GL_ARRAY_BUFFER, PartBowlVBO[1]);
 		glBufferData(GL_ARRAY_BUFFER, data[1].size() * sizeof(float), &data[1][0], GL_STATIC_DRAW);
@@ -99,7 +121,9 @@ void renderPartBowl()
 		glBufferData(GL_ELEMENT_ARRAY_BUFFER, indexPartBowl[1] * sizeof(uint), &idxs[1][0], GL_STATIC_DRAW);
 		glEnableVertexAttribArray(0);
 		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, stride, (void*)0);
-
+		glEnableVertexAttribArray(1);
+		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, stride, (void*)(3 * sizeof(float)));
+		/*
 		glBindVertexArray(PartBowlVAO[2]);
 		glBindBuffer(GL_ARRAY_BUFFER, PartBowlVBO[2]);
 		glBufferData(GL_ARRAY_BUFFER, data[2].size() * sizeof(float), &data[2][0], GL_STATIC_DRAW);
@@ -107,14 +131,20 @@ void renderPartBowl()
 		glBufferData(GL_ELEMENT_ARRAY_BUFFER, indexPartBowl[2] * sizeof(uint), &idxs[2][0], GL_STATIC_DRAW);
 		glEnableVertexAttribArray(0);
 		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, stride, (void*)0);
+		glEnableVertexAttribArray(1);
+		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, stride, (void*)(3 * sizeof(float)));
+		*/
 	}
 
 	glBindVertexArray(PartBowlVAO[0]);
 	glDrawElements(GL_TRIANGLE_STRIP, indexPartBowl[0], GL_UNSIGNED_INT, 0);
+	
 	glBindVertexArray(PartBowlVAO[1]);
 	glDrawElements(GL_TRIANGLE_STRIP, indexPartBowl[1], GL_UNSIGNED_INT, 0);
+	/*
 	glBindVertexArray(PartBowlVAO[2]);
-	glDrawElements(GL_TRIANGLE_STRIP, indexPartBowl[1], GL_UNSIGNED_INT, 0);
+	glDrawElements(GL_TRIANGLE_STRIP, indexPartBowl[2], GL_UNSIGNED_INT, 0);
+	*/
 }
 
 
@@ -143,9 +173,7 @@ void renderBowl()
 		std::vector<float> data;
 		std::vector<uint> idxs;
 
-		//bowl.generate_mesh(60.f, data, idxs);
-		bowl.generate_mesh_hole(60.f, hole_radius, data, idxs);
-
+		bowl.generate_mesh_uv_hole(60.f, 0.3f, data, idxs);
 
 		indexBowl = idxs.size();
 
@@ -154,9 +182,11 @@ void renderBowl()
 		glBufferData(GL_ARRAY_BUFFER, data.size() * sizeof(float), &data[0], GL_STATIC_DRAW);
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, BowlEBO);
 		glBufferData(GL_ELEMENT_ARRAY_BUFFER, indexBowl * sizeof(uint), &idxs[0], GL_STATIC_DRAW);
-		constexpr float stride = 3 * sizeof(float);
+		constexpr float stride = (3 + 2) * sizeof(float);
 		glEnableVertexAttribArray(0);
 		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, stride, (void*)0);
+		glEnableVertexAttribArray(1);
+		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, stride, (void*)(3 * sizeof(float)));
 	}
 
 	glBindVertexArray(BowlVAO);
@@ -185,10 +215,8 @@ void renderDisk()
 		std::vector<float> data;
 		std::vector<uint> idxs;
 
-		disk.generate_mesh(35.f, data, idxs);
-		//disk.generate_mesh_hole(100.f, 0.4f, data, idxs);
-
-
+		disk.generate_mesh_uv(60.f, data, idxs);
+	
 		indexDisk = idxs.size();
 
 		glBindVertexArray(DiskVAO);
@@ -196,9 +224,12 @@ void renderDisk()
 		glBufferData(GL_ARRAY_BUFFER, data.size() * sizeof(float), &data[0], GL_STATIC_DRAW);
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, DiskEBO);
 		glBufferData(GL_ELEMENT_ARRAY_BUFFER, indexDisk * sizeof(uint), &idxs[0], GL_STATIC_DRAW);
-		constexpr float stride = 3 * sizeof(float);
+		constexpr float stride = (3 + 2) * sizeof(float);
+		//constexpr float stride = 3 * sizeof(float);
 		glEnableVertexAttribArray(0);
 		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, stride, (void*)0);
+		glEnableVertexAttribArray(1);
+		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, stride, (void*)(3 * sizeof(float)));
 	}
 
 	glBindVertexArray(DiskVAO);
@@ -231,8 +262,7 @@ void renderEllipticParaboloid()
 
 		EllipticParaboloid ep(radius, a, b, c);
 
-		ep.generate_mesh(72.f,  data, idxs);
-		//ep.generate_mesh_hole(80.f, 0.4f, data, idxs);
+		ep.generate_mesh_uv_hole(60.f, 0.4f, data, idxs);
 
 		indexEllPar = idxs.size();
 
@@ -241,9 +271,11 @@ void renderEllipticParaboloid()
 		glBufferData(GL_ARRAY_BUFFER, data.size() * sizeof(float), &data[0], GL_STATIC_DRAW);
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EllParEBO);
 		glBufferData(GL_ELEMENT_ARRAY_BUFFER, indexEllPar * sizeof(uint), &idxs[0], GL_STATIC_DRAW);
-		constexpr float stride = 3 * sizeof(float);
+		constexpr float stride = (3 + 2) * sizeof(float);
 		glEnableVertexAttribArray(0);
 		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, stride, (void*)0);
+		glEnableVertexAttribArray(1);
+		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, stride, (void*)(3 * sizeof(float)));
 	}
 
 	glBindVertexArray(EllParVAO);
@@ -288,3 +320,66 @@ void destroyShapes()
 
 }
 
+
+
+// utility function for loading a 2D texture from file
+// ---------------------------------------------------
+GLuint loadTexture(const char* path, const bool gammaCorrection, const bool isHdr)
+{
+	GLuint textureID;
+	glGenTextures(1, &textureID);
+
+	// stbi_set_flip_vertically_on_load(true);
+	GLint texwidth = 0; GLint texheight = 0; GLint nrComponents = 0;
+	uchar* data = nullptr;
+	float* fdata = nullptr;
+
+	if (isHdr) // pbr: load the HDR environment map
+		fdata = stbi_loadf(path, &texwidth, &texheight, &nrComponents, 0);
+	else
+		data = stbi_load(path, &texwidth, &texheight, &nrComponents, 0);
+
+	if (data || fdata)
+	{
+		GLenum internalformat = GL_RGB;
+		GLenum dataformat = GL_RGB;
+		if (nrComponents == 1)
+			internalformat = dataformat = GL_RED;
+		else if (nrComponents == 3) {
+			internalformat = gammaCorrection ? GL_SRGB : GL_RGB;
+			dataformat = GL_RGB;
+		}
+		else if (nrComponents == 4) {
+			internalformat = gammaCorrection ? GL_SRGB_ALPHA : GL_RGBA;
+			dataformat = GL_RGBA;
+		}
+
+		glBindTexture(GL_TEXTURE_2D, textureID);
+		if (isHdr) {
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, texwidth, texheight, 0, GL_RGB, GL_FLOAT, fdata);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+			stbi_image_free(fdata);
+		}
+		else {
+			glTexImage2D(GL_TEXTURE_2D, 0, internalformat, texwidth, texheight, 0, dataformat, GL_UNSIGNED_BYTE, data);
+			glGenerateMipmap(GL_TEXTURE_2D);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, dataformat == GL_RGBA ? GL_CLAMP_TO_EDGE : GL_REPEAT);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, dataformat == GL_RGBA ? GL_CLAMP_TO_EDGE : GL_REPEAT);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+			stbi_image_free(data);
+		}
+
+	}
+	else
+	{
+		std::cerr << "Texture failed to load at path: " << path << "\n";
+		stbi_image_free(data);
+		return 0;
+	}
+
+	return textureID;
+}

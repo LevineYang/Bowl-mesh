@@ -26,6 +26,7 @@ private:
 	float param_a, param_b, param_c;
 	float hole_rad;
 	bool set_hole = false;
+	bool useUV = false;
 public:
 	EllipticParaboloid(const float radius, const float a, const float b, const float c,const float center[3] = def_cen)
 		: rad(radius), param_a(a), param_b(b), param_c(c), hole_rad(0.f)
@@ -38,6 +39,14 @@ public:
 	bool generate_mesh_hole(const float max_size_vert, const float hole_radius, std::vector<float>& vertices, std::vector<uint>& indices) 
 	{
 		set_hole = true;
+		useUV = false;
+		hole_rad = hole_radius;
+		return generate_mesh_(max_size_vert, vertices, indices);
+	}
+	bool generate_mesh_uv_hole(const float max_size_vert, const float hole_radius, std::vector<float>& vertices, std::vector<uint>& indices)
+	{
+		set_hole = true;
+		useUV = true;
 		hole_rad = hole_radius;
 		return generate_mesh_(max_size_vert, vertices, indices);
 	}
@@ -45,9 +54,16 @@ public:
 	bool generate_mesh(const float max_size_vert, std::vector<float>& vertices, std::vector<uint>& indices) 
 	{
 		set_hole = false;
+		useUV = false;
 		return generate_mesh_(max_size_vert, vertices, indices);
 	}
-
+	bool generate_mesh_uv(const float max_size_vert, std::vector<float>& vertices, std::vector<uint>& indices)
+	{
+		set_hole = false;
+		useUV = true;
+		return generate_mesh_(max_size_vert, vertices, indices);
+	}
+	
 
 protected:
 	bool generate_mesh_(const float max_size_vert, std::vector<float>& vertices, std::vector<uint>& indices)
@@ -90,8 +106,9 @@ protected:
 
 
 		/*
-			generate vertices
+			generate vertices for mesh elliptic paraboloid
 		*/
+		auto vertices_size = 0;
 		for (int i = 0; i < grid_size; ++i) {
 			for (int j = 0; j < grid_size; ++j) {
 				auto x = x_grid[j + i * grid_size];
@@ -105,6 +122,13 @@ protected:
 				vertices.push_back(x + cen[0]);
 				vertices.push_back(y + cen[1]);
 				vertices.push_back(z + cen[2]);
+				vertices_size += 3;
+				auto u = x;
+				auto v = z;
+				if (useUV) { // texture coordinates
+					vertices.push_back(u);
+					vertices.push_back(v);
+				}
 			}
 		}
 
@@ -112,8 +136,8 @@ protected:
 		/*
 			generate indices by y-order
 		*/
-		int32 vert_size = vertices.size() / 3;
-		int32 last_vert = vertices.size() / 3;
+		int32 vert_size = vertices_size / 3;
+		int32 last_vert = vertices_size / 3;
 		
 		
 		bool oddRow = false;

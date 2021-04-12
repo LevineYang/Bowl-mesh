@@ -2,6 +2,7 @@
 lib/
 packages/
 resource/wood.png
+resource/metal.png
 x64/
 *.config
 *.sln

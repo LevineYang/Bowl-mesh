@@ -69,7 +69,6 @@ void processInput(GLFWwindow* window)
 		cam_.processKeyboard(Camera_Movement::RIGHT, deltaTime);
 	}
 
-
 #ifdef GAMMA
 	if (glfwGetKey(window, GLFW_KEY_G) == GLFW_PRESS && !gammaKeyPressed) {
 		gammaEnabled = !gammaEnabled;
@@ -123,9 +122,9 @@ GLFWwindow* projectInit(const std::string& wndname, int width, int height)
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-	// glfwWindowHint(GLFW_SAMPLES, 4); // for MSAA
+
 	GLFWwindow* window = glfwCreateWindow(width, height, wndname.c_str(), NULL, NULL);
-	// GLFWwindow* window = glfwCreateWindow(SRC_WIDTH, SRC_HEIGHT, wndname.c_str(), NULL, NULL);
+
 	if (window == nullptr) {
 		std::cerr << "Failed create GLFW window\n";
 		glfwTerminate();
@@ -154,13 +153,13 @@ GLFWwindow* projectInit(const std::string& wndname, int width, int height)
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0); // bind default framebuffer
 	SVshader.initShader("shaders/svvert.glsl", "shaders/svfrag.glsl");
-	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
+	// glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
 
 	onEnd = destroyShapes;
 
 	return window;
-
 }
 
 
