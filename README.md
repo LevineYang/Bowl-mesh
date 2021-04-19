@@ -23,7 +23,11 @@ Project contain code generate disk, elliptic paraboloid and bowl mesh***
 <img src="resource/BowlHoleMesh.png">
 
 ### Example №3 - Part Bowl with texture 
+<img src="resource/texture_res.png">
+
+### Example №4 - Part Bowl with texture 
 <img src="resource/bowltexture.png">
+
 
 
 ## Third party library:

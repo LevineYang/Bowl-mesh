@@ -25,6 +25,7 @@ void renderBowl();
 void renderEllipticParaboloid();
 void renderDisk();
 void renderPartBowl();
+void renderQuad();
 GLuint loadTexture(const char* path, const bool gammaCorrection = false, const bool isHdr = false);
 
 static GLuint woodTexture = 0;
@@ -47,7 +48,7 @@ void displayDEMO(GLFWwindow* window)
 #ifdef NO_TEXTURE
 	if (!loadText) {
 		stbi_set_flip_vertically_on_load(true);
-		woodTexture = loadTexture("resource/wood.png");
+		woodTexture = loadTexture("resource/test.jpg");
 		if (woodTexture == 0)
 			exit(EXIT_FAILURE);
 		SVshader.setInt("useTexture", 0);
@@ -62,6 +63,7 @@ void displayDEMO(GLFWwindow* window)
 	//renderEllipticParaboloid();
 	//renderBowl();
 	renderPartBowl();
+	//renderQuad();
 
 	// unbound
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -83,9 +85,8 @@ void renderPartBowl()
 		glGenBuffers(4, &PartBowlVBO[0]);
 		glGenBuffers(4, &PartBowlEBO[0]);
 
-		auto inner_radius = 0.5f;
+		auto inner_radius = 0.4f;
 		auto radius = 0.7f;
-		auto hole_radius = 0.2f;
 		auto a = 0.5f;
 		auto b = 0.5f;
 		auto c = 0.7f;
@@ -113,7 +114,8 @@ void renderPartBowl()
 		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, stride, (void*)0);
 		glEnableVertexAttribArray(1);
 		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, stride, (void*)(3 * sizeof(float)));
-		
+
+		/*
 		glBindVertexArray(PartBowlVAO[1]);
 		glBindBuffer(GL_ARRAY_BUFFER, PartBowlVBO[1]);
 		glBufferData(GL_ARRAY_BUFFER, data[1].size() * sizeof(float), &data[1][0], GL_STATIC_DRAW);
@@ -123,7 +125,7 @@ void renderPartBowl()
 		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, stride, (void*)0);
 		glEnableVertexAttribArray(1);
 		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, stride, (void*)(3 * sizeof(float)));
-		/*
+		
 		glBindVertexArray(PartBowlVAO[2]);
 		glBindBuffer(GL_ARRAY_BUFFER, PartBowlVBO[2]);
 		glBufferData(GL_ARRAY_BUFFER, data[2].size() * sizeof(float), &data[2][0], GL_STATIC_DRAW);
@@ -138,10 +140,11 @@ void renderPartBowl()
 
 	glBindVertexArray(PartBowlVAO[0]);
 	glDrawElements(GL_TRIANGLE_STRIP, indexPartBowl[0], GL_UNSIGNED_INT, 0);
-	
+
+	/*
 	glBindVertexArray(PartBowlVAO[1]);
 	glDrawElements(GL_TRIANGLE_STRIP, indexPartBowl[1], GL_UNSIGNED_INT, 0);
-	/*
+	
 	glBindVertexArray(PartBowlVAO[2]);
 	glDrawElements(GL_TRIANGLE_STRIP, indexPartBowl[2], GL_UNSIGNED_INT, 0);
 	*/
@@ -382,4 +385,35 @@ GLuint loadTexture(const char* path, const bool gammaCorrection, const bool isHd
 	}
 
 	return textureID;
+}
+
+
+
+uint quadVAO = 0;
+uint quadVBO;
+void renderQuad()
+{
+	if (quadVAO == 0)
+	{
+		float quadVertices[] = {
+			// positions        // texture Coords
+			-1.0f,  1.0f, 0.0f, 0.0f, 1.0f,
+			-1.0f, -1.0f, 0.0f, 0.0f, 0.0f,
+			 1.0f,  1.0f, 0.0f, 1.0f, 1.0f,
+			 1.0f, -1.0f, 0.0f, 1.0f, 0.0f,
+		};
+		// setup plane VAO
+		glGenVertexArrays(1, &quadVAO);
+		glGenBuffers(1, &quadVBO);
+		glBindVertexArray(quadVAO);
+		glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), &quadVertices, GL_STATIC_DRAW);
+		glEnableVertexAttribArray(0);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+		glEnableVertexAttribArray(1);
+		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+	}
+	glBindVertexArray(quadVAO);
+	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+	glBindVertexArray(0);
 }

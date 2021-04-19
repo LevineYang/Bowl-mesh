@@ -88,6 +88,10 @@ protected:
 		/*
 			prepare grid mesh in polar coordinate with r - radius and theta - angle
 		*/
+		// texture coordinates generate (u, v) [0, 1]
+		std::vector<float> texture_u = meshgen::linspace(0.0f, 1.f, max_size_vert);
+		auto texture_v = texture_u;
+
 		auto r = meshgen::linspace(0.0f, rad, max_size_vert); // min_size = 0.f, max_size = 100.f, 
 		auto theta = meshgen::linspace(0.f, 2 * PI, max_size_vert);
 		auto mesh_pair = meshgen::meshgrid(r, theta);
@@ -132,6 +136,7 @@ protected:
 			generate mesh vertices for disk and elliptic paraboloid
 		*/
 		auto vertices_size = 0;
+		auto half_grid = grid_size / 2;
 		for (int i = 0; i < grid_size; ++i) {
 			for (int j = 0; j < grid_size; ++j) {
 				auto x = x_grid[j + i * grid_size];
@@ -151,9 +156,12 @@ protected:
 				vertices.push_back(y + cen[1]);
 				vertices.push_back(z + cen[2]);
 				vertices_size += 3;
-				auto u = x;
-				auto v = z;
+
 				if (useUV) { // texture coordinates
+					auto u = texture_u[j];
+					auto v = texture_v[i];
+					if (j == 0 && i == 0)
+						u = texture_u[half_grid];
 					vertices.push_back(u);
 					vertices.push_back(v);
 				}
@@ -299,6 +307,10 @@ protected:
 		/*
 			prepare grid mesh
 		*/
+		// texture coordinates generate (u, v) [0, 1]
+		std::vector<float> texture_u = meshgen::linspace(0.0f, 1.f, max_size_vert);
+		auto texture_v = texture_u;
+
 		std::vector<grid_type> mesh_pairs;
 		auto r = meshgen::linspace(0.0f, rad, max_size_vert); 
 		for (auto i = 0, next = 1; i < part_nums; i++, next += 1) {
@@ -345,11 +357,12 @@ protected:
 				}
 			}
 		}
-		
+				
 
 		/*
 			generate mesh vertices for disk and elliptic paraboloid
 		*/
+		auto half_grid = grid_size / 2;
 		for (auto k = 0; k < part_nums; ++k) {
 			for (int i = 0; i < grid_size; ++i) {
 				for (int j = 0; j < grid_size; ++j) {
@@ -369,9 +382,14 @@ protected:
 					vertices[k].push_back(x + cen[0]);
 					vertices[k].push_back(y + cen[1]);
 					vertices[k].push_back(z + cen[2]);
-					auto u = x;
-					auto v = z;
+
+
 					if (useUV) { // texture coordinates
+						auto u = texture_u[j];
+						auto v = texture_v[i];
+						if (j == 0 && i == 0)
+							u = texture_u[half_grid];
+				
 						vertices[k].push_back(u);
 						vertices[k].push_back(v);
 					}

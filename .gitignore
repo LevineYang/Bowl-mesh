@@ -3,6 +3,9 @@ lib/
 packages/
 resource/wood.png
 resource/metal.png
+resource/camres.png
+resource/camresund.png
+resource/test.jpg
 x64/
 *.config
 *.sln

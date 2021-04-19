@@ -68,6 +68,9 @@ void processInput(GLFWwindow* window)
 	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
 		cam_.processKeyboard(Camera_Movement::RIGHT, deltaTime);
 	}
+	if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) {
+		saveScreenshot("texture_res.png");
+	}
 
 #ifdef GAMMA
 	if (glfwGetKey(window, GLFW_KEY_G) == GLFW_PRESS && !gammaKeyPressed) {
