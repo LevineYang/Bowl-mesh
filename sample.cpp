@@ -63,7 +63,7 @@ void displayDEMO(GLFWwindow* window)
 	//renderEllipticParaboloid();
 	//renderBowl();
 	renderPartBowl();
-	//renderQuad();
+
 
 	// unbound
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
