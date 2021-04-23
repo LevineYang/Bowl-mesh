@@ -154,7 +154,7 @@ GLFWwindow* projectInit(const std::string& wndname, int width, int height)
 	glBindFramebuffer(GL_FRAMEBUFFER, 0); // bind default framebuffer
 	SVshader.initShader("shaders/svvert.glsl", "shaders/svfrag.glsl");
 
-	// glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
 
 	onEnd = destroyShapes;

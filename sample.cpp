@@ -48,6 +48,7 @@ void displayDEMO(GLFWwindow* window)
 #ifdef NO_TEXTURE
 	if (!loadText) {
 		stbi_set_flip_vertically_on_load(true);
+		//woodTexture = loadTexture("resource/camres.png");
 		woodTexture = loadTexture("resource/test.jpg");
 		if (woodTexture == 0)
 			exit(EXIT_FAILURE);
@@ -61,9 +62,9 @@ void displayDEMO(GLFWwindow* window)
 #endif
 	//renderDisk();
 	//renderEllipticParaboloid();
-	//renderBowl();
-	renderPartBowl();
-
+	renderBowl();
+	//renderPartBowl();
+	//renderQuad();
 
 	// unbound
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -164,9 +165,9 @@ void renderBowl()
 		glGenBuffers(1, &BowlVBO);
 		glGenBuffers(1, &BowlEBO);
 
-		auto inner_radius = 0.5f;
-		auto radius = 0.7f;
-		auto hole_radius = 0.2f;
+		auto inner_radius = 0.3f;
+		auto radius = 0.5f;
+		auto hole_radius = 0.1f;
 		auto a = 0.5f;
 		auto b = 0.5f;
 		auto c = 0.7f;
@@ -176,7 +177,12 @@ void renderBowl()
 		std::vector<float> data;
 		std::vector<uint> idxs;
 
-		bowl.generate_mesh_uv_hole(60.f, 0.3f, data, idxs);
+		//bowl.generate_mesh(40.f, data, idxs);
+		//bowl.generate_mesh_hole(40.f, hole_radius, data, idxs);
+		//bowl.generate_mesh_uv_hole(40.f, hole_radius, data, idxs);
+		//bowl.generate_mesh_uv(40.f, data, idxs);
+		bowl.generate_mesh_uv_hole_part(3.14159265359f, 40.f, hole_radius, data, idxs);
+		//bowl.generate_mesh_hole_part(3.14159265359f, 40.f, hole_radius, data, idxs);
 
 		indexBowl = idxs.size();
 
@@ -186,6 +192,7 @@ void renderBowl()
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, BowlEBO);
 		glBufferData(GL_ELEMENT_ARRAY_BUFFER, indexBowl * sizeof(uint), &idxs[0], GL_STATIC_DRAW);
 		constexpr float stride = (3 + 2) * sizeof(float);
+		//constexpr float stride = 3 * sizeof(float);
 		glEnableVertexAttribArray(0);
 		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, stride, (void*)0);
 		glEnableVertexAttribArray(1);
