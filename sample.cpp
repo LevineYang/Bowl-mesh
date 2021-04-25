@@ -182,6 +182,7 @@ void renderBowl()
 		//bowl.generate_mesh_uv_hole(40.f, hole_radius, data, idxs);
 		//bowl.generate_mesh_uv(40.f, data, idxs);
 		bowl.generate_mesh_uv_hole_part(3.14159265359f, 40.f, hole_radius, data, idxs);
+		//bowl.generate_mesh_uv_part(3.14159265359f, 40.f, data, idxs);
 		//bowl.generate_mesh_hole_part(3.14159265359f, 40.f, hole_radius, data, idxs);
 
 		indexBowl = idxs.size();

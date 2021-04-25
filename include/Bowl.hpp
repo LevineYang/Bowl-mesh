@@ -52,6 +52,13 @@ public:
 		polar_coord = 2 * PI;
 		return generate_mesh_(max_size_vert, vertices, indices);
 	}
+	bool generate_mesh_uv_part(const float part_polar, const float max_size_vert, std::vector<float>& vertices, std::vector<uint>& indices)
+	{
+		set_hole = false;
+		useUV = true;
+		polar_coord = part_polar;
+		return generate_mesh_(max_size_vert, vertices, indices);
+	}
 
 	bool generate_mesh_hole(const float max_size_vert, const float hole_radius, std::vector<float>& vertices, std::vector<uint>& indices)
 	{
@@ -243,8 +250,7 @@ private:
 					auto prev = y * grid_size + x;
 					/* change order when change disk to elliptic paraboloid */
 					if (y == idx_min_y && x == grid_size - 1) {
-						std::swap(current, prev);
-						indices.push_back(prev - grid_size);
+						indices.push_back(current - grid_size);
 						indices.push_back(current);
 						indices.push_back(prev);
 						continue;
