@@ -26,6 +26,7 @@ void renderEllipticParaboloid();
 void renderDisk();
 void renderPartBowl();
 void renderQuad();
+void renderBowlRect();
 GLuint loadTexture(const char* path, const bool gammaCorrection = false, const bool isHdr = false);
 
 static GLuint woodTexture = 0;
@@ -62,9 +63,10 @@ void displayDEMO(GLFWwindow* window)
 #endif
 	//renderDisk();
 	//renderEllipticParaboloid();
-	renderBowl();
+	//renderBowl();
 	//renderPartBowl();
 	//renderQuad();
+	renderBowlRect();
 
 	// unbound
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -72,6 +74,116 @@ void displayDEMO(GLFWwindow* window)
 }
 
 
+
+
+
+
+
+uint BowlRectVAO = 0;
+uint BowlRectVBO;
+uint BowlRectEBO;
+uint indexRectBowl;
+void renderBowlRect()
+{
+	if (BowlRectVAO == 0)
+	{
+		glGenVertexArrays(1, &BowlRectVAO);
+
+		glGenBuffers(1, &BowlRectVBO);
+		glGenBuffers(1, &BowlRectEBO);
+
+		auto inner_radius = 0.4f;
+		auto radius = 0.5f;
+		auto a = 0.5f;
+		auto b = 0.5f;
+		auto c = 0.2f;
+
+		auto x1 = -0.1f, x2 = 0.1f, y1 = -0.07f, y2 = 0.07f;
+
+		BowlRectHole bowl(inner_radius, radius, a, b, c);
+
+		std::vector<float> data;
+		std::vector<uint> idxs;
+
+		
+		//bowl.generate_mesh(40.f, x1, y1, x2, y2, data, idxs);
+		bowl.generate_mesh_uv(40.f, x1, y1, x2, y2, data, idxs);
+
+		indexRectBowl = idxs.size();
+
+		glBindVertexArray(BowlRectVAO);
+		glBindBuffer(GL_ARRAY_BUFFER, BowlRectVBO);
+		glBufferData(GL_ARRAY_BUFFER, data.size() * sizeof(float), &data[0], GL_STATIC_DRAW);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, BowlRectEBO);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, indexRectBowl * sizeof(uint), &idxs[0], GL_STATIC_DRAW);
+		constexpr float stride = (3 + 2) * sizeof(float);
+		//constexpr float stride = 3 * sizeof(float);
+		glEnableVertexAttribArray(0);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, stride, (void*)0);
+		glEnableVertexAttribArray(1);
+		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, stride, (void*)(3 * sizeof(float)));
+	}
+
+	glBindVertexArray(BowlRectVAO);
+	glDrawElements(GL_TRIANGLE_STRIP, indexRectBowl, GL_UNSIGNED_INT, 0);
+
+}
+
+
+
+
+
+
+
+uint BowlVAO = 0;
+uint BowlVBO;
+uint BowlEBO;
+uint indexBowl;
+void renderBowl()
+{
+	if (BowlVAO == 0)
+	{
+		glGenVertexArrays(1, &BowlVAO);
+
+		glGenBuffers(1, &BowlVBO);
+		glGenBuffers(1, &BowlEBO);
+
+		auto inner_radius = 0.3f;
+		auto radius = 0.7f;
+		auto hole_radius = 0.1f;
+		auto a = 0.5f;
+		auto b = 0.5f;
+		auto c = 0.2f;
+
+		Bowl bowl(inner_radius, radius, a, b, c);
+
+		std::vector<float> data;
+		std::vector<uint> idxs;
+
+		//bowl.generate_mesh_uv_hole(40.f, hole_radius, data, idxs);
+		//bowl.generate_mesh_uv(80.f, data, idxs);
+		bowl.generate_mesh_hole(40.f, hole_radius, data, idxs);
+		
+
+		indexBowl = idxs.size();
+
+		glBindVertexArray(BowlVAO);
+		glBindBuffer(GL_ARRAY_BUFFER, BowlVBO);
+		glBufferData(GL_ARRAY_BUFFER, data.size() * sizeof(float), &data[0], GL_STATIC_DRAW);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, BowlEBO);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, indexBowl * sizeof(uint), &idxs[0], GL_STATIC_DRAW);
+		//constexpr float stride = (3 + 2) * sizeof(float);
+		constexpr float stride = 3 * sizeof(float);
+		glEnableVertexAttribArray(0);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, stride, (void*)0);
+		//glEnableVertexAttribArray(1);
+		//glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, stride, (void*)(3 * sizeof(float)));
+	}
+
+	glBindVertexArray(BowlVAO);
+	glDrawElements(GL_TRIANGLE_STRIP, indexBowl, GL_UNSIGNED_INT, 0);
+
+}
 
 GLuint PartBowlVAO[4]{ 0 };
 GLuint PartBowlVBO[4];
@@ -149,60 +261,6 @@ void renderPartBowl()
 	glBindVertexArray(PartBowlVAO[2]);
 	glDrawElements(GL_TRIANGLE_STRIP, indexPartBowl[2], GL_UNSIGNED_INT, 0);
 	*/
-}
-
-
-uint BowlVAO = 0;
-uint BowlVBO;
-uint BowlEBO;
-uint indexBowl;
-void renderBowl()
-{
-	if (BowlVAO == 0)
-	{
-		glGenVertexArrays(1, &BowlVAO);
-
-		glGenBuffers(1, &BowlVBO);
-		glGenBuffers(1, &BowlEBO);
-
-		auto inner_radius = 0.3f;
-		auto radius = 0.5f;
-		auto hole_radius = 0.1f;
-		auto a = 0.5f;
-		auto b = 0.5f;
-		auto c = 0.7f;
-
-		Bowl bowl(inner_radius, radius, a, b, c);
-
-		std::vector<float> data;
-		std::vector<uint> idxs;
-
-		//bowl.generate_mesh(40.f, data, idxs);
-		//bowl.generate_mesh_hole(40.f, hole_radius, data, idxs);
-		//bowl.generate_mesh_uv_hole(40.f, hole_radius, data, idxs);
-		//bowl.generate_mesh_uv(40.f, data, idxs);
-		bowl.generate_mesh_uv_hole_part(3.14159265359f, 40.f, hole_radius, data, idxs);
-		//bowl.generate_mesh_uv_part(3.14159265359f, 40.f, data, idxs);
-		//bowl.generate_mesh_hole_part(3.14159265359f, 40.f, hole_radius, data, idxs);
-
-		indexBowl = idxs.size();
-
-		glBindVertexArray(BowlVAO);
-		glBindBuffer(GL_ARRAY_BUFFER, BowlVBO);
-		glBufferData(GL_ARRAY_BUFFER, data.size() * sizeof(float), &data[0], GL_STATIC_DRAW);
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, BowlEBO);
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, indexBowl * sizeof(uint), &idxs[0], GL_STATIC_DRAW);
-		constexpr float stride = (3 + 2) * sizeof(float);
-		//constexpr float stride = 3 * sizeof(float);
-		glEnableVertexAttribArray(0);
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, stride, (void*)0);
-		glEnableVertexAttribArray(1);
-		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, stride, (void*)(3 * sizeof(float)));
-	}
-
-	glBindVertexArray(BowlVAO);
-	glDrawElements(GL_TRIANGLE_STRIP, indexBowl, GL_UNSIGNED_INT, 0);
-
 }
 
 
@@ -323,6 +381,10 @@ void destroyShapes()
 	glDeleteVertexArrays(1, &BowlVAO);
 	glDeleteBuffers(1, &BowlVBO);
 	glDeleteBuffers(1, &BowlEBO);
+
+	glDeleteVertexArrays(1, &BowlRectVAO);
+	glDeleteBuffers(1, &BowlRectVBO);
+	glDeleteBuffers(1, &BowlRectEBO);
 
 
 	glDeleteVertexArrays(4, &PartBowlVAO[0]);

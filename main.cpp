@@ -13,7 +13,7 @@ static func_ptr onEnd = nullptr;
 
 
 Shader SVshader;
-Camera cam_(glm::vec3(0.f, 0.f, 3.f), glm::vec3(0.f, 1.f, 0.f));
+Camera cam_(glm::vec3(0.f, 0.5f, 1.f), glm::vec3(0.f, 1.f, 0.f));
 float aspect_ratio = SRC_WIDTH / SRC_HEIGHT;
 float deltaTime = 0.f;
 float lastFrame = 0.f;
