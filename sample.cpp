@@ -26,7 +26,6 @@ void renderEllipticParaboloid();
 void renderDisk();
 void renderPartBowl();
 void renderQuad();
-void renderBowlRect();
 GLuint loadTexture(const char* path, const bool gammaCorrection = false, const bool isHdr = false);
 
 static GLuint woodTexture = 0;
@@ -66,69 +65,12 @@ void displayDEMO(GLFWwindow* window)
 	//renderBowl();
 	//renderPartBowl();
 	//renderQuad();
-	renderBowlRect();
+	
 
 	// unbound
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
 }
-
-
-
-
-
-
-
-uint BowlRectVAO = 0;
-uint BowlRectVBO;
-uint BowlRectEBO;
-uint indexRectBowl;
-void renderBowlRect()
-{
-	if (BowlRectVAO == 0)
-	{
-		glGenVertexArrays(1, &BowlRectVAO);
-
-		glGenBuffers(1, &BowlRectVBO);
-		glGenBuffers(1, &BowlRectEBO);
-
-		auto inner_radius = 0.25f;
-		auto radius = 0.3f;
-		auto a = 1.6f;
-		auto b = 1.6f;
-		auto c = 1.0f;
-
-		auto x1 = -0.06f, x2 = 0.06f, y1 = -0.06f, y2 = 0.06f;
-
-		BowlRect bowl(inner_radius, radius, x1, y1, x2, y2, a, b, c);
-
-		std::vector<float> data;
-		std::vector<uint> idxs;
-
-		
-		bowl.generate_mesh(60.f, data, idxs);
-		//bowl.generate_mesh_uv(60.f, data, idxs);
-
-		indexRectBowl = idxs.size();
-
-		glBindVertexArray(BowlRectVAO);
-		glBindBuffer(GL_ARRAY_BUFFER, BowlRectVBO);
-		glBufferData(GL_ARRAY_BUFFER, data.size() * sizeof(float), &data[0], GL_STATIC_DRAW);
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, BowlRectEBO);
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, indexRectBowl * sizeof(uint), &idxs[0], GL_STATIC_DRAW);
-		//constexpr float stride = (3 + 2) * sizeof(float);
-		constexpr float stride = 3 * sizeof(float);
-		glEnableVertexAttribArray(0);
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, stride, (void*)0);
-		//glEnableVertexAttribArray(1);
-		//glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, stride, (void*)(3 * sizeof(float)));
-	}
-
-	glBindVertexArray(BowlRectVAO);
-	glDrawElements(GL_TRIANGLE_STRIP, indexRectBowl, GL_UNSIGNED_INT, 0);
-
-}
-
 
 
 
@@ -381,10 +323,6 @@ void destroyShapes()
 	glDeleteVertexArrays(1, &BowlVAO);
 	glDeleteBuffers(1, &BowlVBO);
 	glDeleteBuffers(1, &BowlEBO);
-
-	glDeleteVertexArrays(1, &BowlRectVAO);
-	glDeleteBuffers(1, &BowlRectVBO);
-	glDeleteBuffers(1, &BowlRectEBO);
 
 
 	glDeleteVertexArrays(4, &PartBowlVAO[0]);
