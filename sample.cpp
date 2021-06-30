@@ -92,22 +92,22 @@ void renderBowlRect()
 		glGenBuffers(1, &BowlRectVBO);
 		glGenBuffers(1, &BowlRectEBO);
 
-		auto inner_radius = 0.4f;
-		auto radius = 0.5f;
-		auto a = 0.5f;
-		auto b = 0.5f;
-		auto c = 0.2f;
+		auto inner_radius = 0.25f;
+		auto radius = 0.3f;
+		auto a = 1.6f;
+		auto b = 1.6f;
+		auto c = 1.0f;
 
-		auto x1 = -0.1f, x2 = 0.1f, y1 = -0.07f, y2 = 0.07f;
+		auto x1 = -0.06f, x2 = 0.06f, y1 = -0.06f, y2 = 0.06f;
 
-		BowlRectHole bowl(inner_radius, radius, a, b, c);
+		BowlRect bowl(inner_radius, radius, x1, y1, x2, y2, a, b, c);
 
 		std::vector<float> data;
 		std::vector<uint> idxs;
 
 		
-		//bowl.generate_mesh(40.f, x1, y1, x2, y2, data, idxs);
-		bowl.generate_mesh_uv(40.f, x1, y1, x2, y2, data, idxs);
+		bowl.generate_mesh(60.f, data, idxs);
+		//bowl.generate_mesh_uv(60.f, data, idxs);
 
 		indexRectBowl = idxs.size();
 
@@ -116,12 +116,12 @@ void renderBowlRect()
 		glBufferData(GL_ARRAY_BUFFER, data.size() * sizeof(float), &data[0], GL_STATIC_DRAW);
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, BowlRectEBO);
 		glBufferData(GL_ELEMENT_ARRAY_BUFFER, indexRectBowl * sizeof(uint), &idxs[0], GL_STATIC_DRAW);
-		constexpr float stride = (3 + 2) * sizeof(float);
-		//constexpr float stride = 3 * sizeof(float);
+		//constexpr float stride = (3 + 2) * sizeof(float);
+		constexpr float stride = 3 * sizeof(float);
 		glEnableVertexAttribArray(0);
 		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, stride, (void*)0);
-		glEnableVertexAttribArray(1);
-		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, stride, (void*)(3 * sizeof(float)));
+		//glEnableVertexAttribArray(1);
+		//glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, stride, (void*)(3 * sizeof(float)));
 	}
 
 	glBindVertexArray(BowlRectVAO);

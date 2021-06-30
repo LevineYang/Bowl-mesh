@@ -6,13 +6,13 @@
 
 #include "meshgrid.hpp"
 
+#include <glm/glm.hpp>
 
 using uint = uint32_t;
 using int32 = int32_t;
 
 
-
-class BowlRectHole
+class BowlRect
 {
 private:
 	constexpr static float def_cen[3]{ 0.f }; // for default value pass to constructor - argument center 
@@ -25,40 +25,40 @@ private:
 	float rad;
 	float param_a, param_b, param_c;
 	bool useUV = false;
+	float tl_x, tl_y, br_x, br_y;
 	float polar_coord = 2 * PI;
 public:
-	BowlRectHole(const float inner_radius, const float radius, const float a, const float b, const float c, const float center[3] = def_cen)
-		: inner_rad(inner_radius), rad(radius), param_a(a), param_b(b), param_c(c)
+	BowlRect(const float inner_radius, const float radius,
+		const float tl_x_, const float tl_y_, const float br_x_, const float br_y_, 
+		const float a, const float b, const float c, const float center[3] = def_cen)
+		: inner_rad(inner_radius), rad(radius), tl_x(tl_x_), tl_y(tl_y_), br_x(br_x_), br_y(br_y_),
+		param_a(a), param_b(b), param_c(c)
 	{
 		cen[0] = center[0];
 		cen[1] = center[1];
 		cen[2] = center[2];
 	}
-
-	bool generate_mesh(const float max_size_vert, const float tl_x, const float tl_y, const float br_x, const float br_y,
-		std::vector<float>& vertices, std::vector<uint>& indices)
+	bool generate_mesh(const float max_size_vert, std::vector<float>& vertices, std::vector<uint>& indices)
 	{
 		useUV = false;
 		polar_coord = 2 * PI;
-		return generate_mesh_(max_size_vert, tl_x, tl_y, br_x, br_y, vertices, indices);
+		return generate_mesh_(max_size_vert, vertices, indices);
 	}
 
-	bool generate_mesh_uv(const float max_size_vert, const float tl_x, const float tl_y, const float br_x, const float br_y,
-		std::vector<float>& vertices, std::vector<uint>& indices)
+	bool generate_mesh_uv(const float max_size_vert, std::vector<float>& vertices, std::vector<uint>& indices)
 	{
 		useUV = true;
 		polar_coord = 2 * PI;
-		return generate_mesh_(max_size_vert, tl_x, tl_y, br_x, br_y, vertices, indices);
+		return generate_mesh_(max_size_vert, vertices, indices);
 	}
 protected:
-	bool generate_mesh_(const float max_size_vert, const float tl_x, const float tl_y, const float br_x, const float br_y,
-						std::vector<float>& vertices, std::vector<uint>& indices)
+	bool generate_mesh_(const float max_size_vert, std::vector<float>& vertices, std::vector<uint>& indices)
 	{
 		if (fabs(param_a) <= epsilon || fabs(param_b) <= epsilon || fabs(param_c) <= epsilon)
 			return false;
 		if (rad <= 0.f || inner_rad <= 0.f)
 			return false;
-		
+
 
 		auto a = param_a;
 		auto b = param_b;
@@ -71,7 +71,7 @@ protected:
 			prepare grid mesh in polar coordinate with r - radius and theta - angle
 		*/
 		// texture coordinates generate (u, v) [0, 1]
-		std::vector<float> texture_u = meshgen::linspace(0.0f, 1.f, max_size_vert);
+		std::vector<float> texture_u = meshgen::linspace(0.0f, 1.0f, max_size_vert);
 		auto texture_v = texture_u;
 
 		/*
@@ -79,110 +79,82 @@ protected:
 		*/
 		auto rect_sides = 4;
 		std::vector<float> rect_w = meshgen::linspace(tl_x, br_x, max_size_vert / rect_sides);
-		std::vector<float> rect_h = meshgen::linspace(tl_y, br_y, max_size_vert / rect_sides);
+		std::vector<float> rect_l = meshgen::linspace(tl_y, br_y, max_size_vert / rect_sides);
 		auto rect_size = rect_w.size();
-		std::vector<float> rect_grid_x, rect_grid_z;
-
-		for (int it = rect_size - 1; it >= 0; --it) {
-			rect_grid_x.push_back(rect_w[it]);
-			rect_grid_z.push_back(br_y);
-		}
-
-		for (int it = rect_size - 1; it >= 0; --it) {
-			rect_grid_x.push_back(tl_x);
-			rect_grid_z.push_back(rect_h[it]);
-		}
-
-		for (int it = 0; it < rect_size; ++it) {
-			rect_grid_x.push_back(rect_w[it]);
-			rect_grid_z.push_back(tl_y);
-		}
-
-		for (int it = 0; it < rect_size; ++it) {
-			rect_grid_x.push_back(br_x);
-			rect_grid_z.push_back(rect_h[it]);
-		}
 		
-		/* trick for align connection vertices (for avoid manipulation indices) */
-		const auto offset = max_size_vert / (rect_sides * 2);
-		std::rotate(rect_grid_x.rbegin(), rect_grid_x.rbegin() + offset, rect_grid_x.rend());
-		std::rotate(rect_grid_z.rbegin(), rect_grid_z.rbegin() + offset, rect_grid_z.rend());
-
-		const float width = fabs(br_x - tl_x);
-		const float length = fabs(br_y - tl_y);
-		const float diag_rect = sqrtf(width*width + length* length);
-		const float rad_rect = diag_rect / 2.f + 1e-2;
 
 		/*
 			main part of calculation
 		*/
-		auto r = meshgen::linspace(rad_rect, rad, max_size_vert); // min_size = 0.f, max_size = 100.f, 
-		auto theta = meshgen::linspace(0.f, polar_coord, max_size_vert);
-		auto mesh_pair = meshgen::meshgrid(r, theta);
-
-		auto R = std::get<0>(mesh_pair);
-		auto THETA = std::get<1>(mesh_pair);
-		size_t grid_size = R.size();
+		auto r = meshgen::linspace(0.0f, rad, max_size_vert);
+		size_t grid_size = r.size();
 		std::vector<float> x_grid;
 		std::vector<float> y_grid;
 		std::vector<float> z_grid;
+		std::vector<float> rect_grid_x, rect_grid_z;
 
-		// Convert to cart coordinates
-		// x = r*cos(theta), z = r*sin(theta), y/c = (x^2)/(a^2) + (z^2)/(b^2); 
+		constexpr auto step = 0.006f;
+		auto incr_step = 0.0f;		
 		for (int i = 0; i < grid_size; ++i) {
+			
+			for (int it = rect_size - 1; it >= 0; --it) {
+				rect_grid_x.push_back(rect_w[it]);
+				rect_grid_z.push_back(br_y + incr_step);
+			}
+
+			for (int it = rect_size - 1; it >= 0; --it) {
+				rect_grid_x.push_back(tl_x - incr_step);
+				rect_grid_z.push_back(rect_l[it]);
+			}
+
+			for (int it = 0; it < rect_size; ++it) {
+				rect_grid_x.push_back(rect_w[it]);
+				rect_grid_z.push_back(tl_y - incr_step);
+			}
+
+			for (int it = 0; it < rect_size; ++it) {
+				rect_grid_x.push_back(br_x + incr_step);
+				rect_grid_z.push_back(rect_l[it]);
+			}
+			
+
 			for (int j = 0; j < grid_size; ++j) {
-				auto x = 0.0f;
-				auto z = 0.0f;
-				if (i == 0) {
-					x = rect_grid_x[j];
-					z = rect_grid_z[j];
+				auto x = rect_grid_x[j];
+				auto z = rect_grid_z[j];
+				auto y = 0.065f;
+				if (!lt_radius(x, z, inner_rad)) {
+					const float width = fabs((br_x + incr_step) - (tl_x - incr_step));
+					const float length = fabs((br_y + incr_step) - (tl_y - incr_step));
+					const float diag_rect = sqrtf(width * width + length * length);
+					const float rad_rect = diag_rect / 2.f;
+					y = c * (pow(rad_rect / a, 2) + pow(rad_rect / b, 2));
 				}
-				else if (i == 1) {
-					x = rad_rect * cos(THETA(i, j));
-					z = rad_rect * sin(THETA(i, j));
-				}
-				else {
-					x = R(i, j) * cos(THETA(i, j));
-					z = R(i, j) * sin(THETA(i, j));					
-				}	
-				auto y = c * (pow((x / a), 2) + pow((z / b), 2)); // ?
 				x_grid.push_back(x);
 				z_grid.push_back(z);
 				y_grid.push_back(y);
 			}
+
+			incr_step += step;
+			rect_w = meshgen::linspace(tl_x - incr_step, br_x + incr_step, max_size_vert / rect_sides);
+			rect_l = meshgen::linspace(tl_y - incr_step, br_y + incr_step, max_size_vert / rect_sides);
+			rect_grid_x.clear();
+			rect_grid_z.clear();
 		}
 
-		/*
-			find start level - level when disk passes from to elliptic paraboloid
-		*/
-		auto min_y = 0.f;
-		auto idx_min_y = 0u; // index y - component when transition between disk and paraboloid
-		for (int i = 0; i < grid_size; ++i) {
-			for (int j = 0; j < grid_size; ++j) {
-				auto x = x_grid[j + i * grid_size];
-				auto z = z_grid[j + i * grid_size];
-				if (lt_radius(x, z, inner_rad)) { // check level of paraboloid
-					min_y = y_grid[j + i * grid_size];
-					idx_min_y = i;
-					break;
-				}
-			}
-		}
+
 
 		/*
 			generate mesh vertices for disk and elliptic paraboloid
 		*/
 		auto vertices_size = 0;
-		auto half_grid = grid_size / 2;
 		auto offset_idx_min_y = 0;
 		for (int i = 0; i < grid_size; ++i) {
 			for (int j = 0; j < grid_size; ++j) {
 				auto x = x_grid[j + i * grid_size];
 				auto z = z_grid[j + i * grid_size];
 
-				auto y = min_y;
-				if (gt_radius(x, z, inner_rad)) // check level of paraboloid
-					y = y_grid[j + i * grid_size];
+				 // check level of paraboloid
+				auto y = y_grid[j + i * grid_size];		
 
 				vertices.push_back(x + cen[0]);
 				vertices.push_back(y + cen[1]);
@@ -198,19 +170,17 @@ protected:
 			}
 		}
 
-
 		/*
 			generate indices by y-order
 		*/
-		idx_min_y -= offset_idx_min_y;
 		auto last_vert = vertices_size / 3;
-		generate_indices(indices, grid_size, idx_min_y, last_vert);
+		generate_indices(indices, grid_size, last_vert);
 
 		return true;
 
 	}
 private:
-	void generate_indices(std::vector<uint>& indices, const uint grid_size, const uint idx_min_y, const int32 last_vert) {
+	void generate_indices(std::vector<uint>& indices, const uint grid_size, const int32 last_vert) {
 
 		bool oddRow = false;
 		for (uint y = 0; y < grid_size - 1; ++y) {
@@ -221,24 +191,10 @@ private:
 				{
 					auto current = y * grid_size + x;
 					auto next = (y + 1) * grid_size + x;
-					/* change order when change disk to elliptic paraboloid */
-					if (y == idx_min_y && x == 0) {
-						std::swap(current, next);
-						indices.push_back(current - grid_size);
-						indices.push_back(next);
-						indices.push_back(current);
-						continue;
-					}
 					if (current >= last_vert || next >= last_vert)
 						continue;
 					indices.push_back(current);
 					indices.push_back(next);
-					/* for connection last and first vertices of rect */
-					if (y == 0 && x == (grid_size - 1)) {
-						indices.push_back(0);
-						indices.push_back(next);
-						indices.push_back(next);
-					}
 				}
 			}
 			else
@@ -247,20 +203,12 @@ private:
 				{
 					auto current = (y + 1) * grid_size + x;
 					auto prev = y * grid_size + x;
-					/* change order when change disk to elliptic paraboloid */
-					if (y == idx_min_y && x == grid_size - 1) {
-						indices.push_back(current - grid_size);
-						indices.push_back(current);
-						indices.push_back(prev);
-						continue;
-					}
+					
 					if (current >= last_vert || prev >= last_vert)
-						continue;
+						continue;	
+					
 					indices.push_back(current);
 					indices.push_back(prev);
-				
-				
-
 				}
 			}
 			oddRow = !oddRow;
@@ -281,6 +229,7 @@ private:
 		return gt;
 	}
 };
+
 
 
 class Bowl
@@ -529,7 +478,6 @@ private:
 						continue;
 					indices.push_back(current);
 					indices.push_back(prev);
-
 				}
 			}
 			oddRow = !oddRow;
